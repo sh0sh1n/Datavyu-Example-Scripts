@@ -1,4 +1,4 @@
-OpenSHAPA-Example-Scripts
+Datavyu-Example-Scripts
 =========================
 
-Repository of example OpenSHAPA Scripts
+Repository of example Datavyu Scripts
