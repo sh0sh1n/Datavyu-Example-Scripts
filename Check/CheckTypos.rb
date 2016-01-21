@@ -1,24 +1,6 @@
+# Checks valid codes in columns.
+
 require 'Datavyu_API.rb'
-
-def getCellFromTime(col, time)
-  for cell in col.cells
-    if cell.onset <= time and cell.offset >= time
-      return cell
-    end
-  end
-  return nil
-end
-
-def printCellArgs(cell)
-  s = Array.new
-  s << cell.ordinal.to_s
-  s << cell.onset.to_s
-  s << cell.offset.to_s
-  for arg in cell.arglist
-    s << cell.get_arg(arg)
-  end
-  return s
-end
 
 begin
    #$debug=true
