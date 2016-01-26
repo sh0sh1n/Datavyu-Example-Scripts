@@ -2,8 +2,10 @@
 
 ## Params
 # Which directory do we want to load files from?
-input_folder = "~/Desktop/input"
-output_file = "~/Desktop/output.txt"
+input_folder = '~/Desktop/input'
+output_file = '~/Desktop/output.csv'
+delimiter = ',' # separator between data
+print_header = true
 
 # Set up the arguments that we want to print for each variable.
 # These must be exactly the argument names from Datavyu but with all
@@ -19,24 +21,40 @@ trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhan
 ## Body
 require 'Datavyu_API.rb'
 
+# Add functions to RCell
+class RCell
+  def getArgs(*codes)
+    vals = codes.map do |cname|
+      case(cname)
+      when /onset/
+        self.onset
+      when /offset/
+        self.offset
+      when /ordinal/
+        self.ordinal
+      else
+        @arglist.include?(cname)? self.get_arg(cname) : raise("Cell does not have code #{cname}")
+      end
+    end
+
+    return vals
+  end
+end
+
 begin
   #$debug=true
 
   # Obtain a listing of files in the directory
   static_dir = Dir.new(File.expand_path(input_folder))
 
-  # Open the file we want to print the output to
-  # ~ is a shortcut for the current user's home directory, ~/Desktop/ will put it
-  # on your desktop
-  output_file = File.new(File.expand_path(output_file), 'w')
+  # Init an empty list to store lines of data
+  data = []
 
-  # Put the header together.
-  header = id_order + cond_order + trial_order
-  for h in header
-    output_file.write(h + "\t")
+  # Put the header together and add as first item to our data.
+  if(print_header)
+    header = id_order + cond_order + trial_order
+    data << header.join(delimiter)
   end
-  output_file.write("\n")
-
 
   # Loop over all Datavyu files (files in directory that end with ".opf" )
   for file in static_dir.select{ |file| file.end_with?('.opf') }
@@ -50,23 +68,38 @@ begin
 
     # Loop over the cells in ID
     for idcell in id.cells
+      # Get id codes frome this id cell
+      idCodes = idcell.getArgs(*id_order)
+
       # Loop over the cells in condition which are contained by this idcell
       for condcell in cond.cells.select{ |condcell| idcell.contains(condcell) }
+        # Get condition codes from this condition cell
+        condCodes = condcell.getArgs(*cond_order)
+
         # Loop over the trial cells contained by this condcell
         for tcell in trial.cells.select{ |trialcell| condcell.contains(trialcell) }
-          # Print this ID's information
-          print_args(idcell, output_file, id_order)
-          # Print this Condition cell's information
-          print_args(condcell, output_file, cond_order)
-          # Print this Trial's information
-          print_args(tcell, output_file, trial_order)
-          # And write a newline to the output file so the next cell
-          # is on its own line
-          output_file.write("\n")
+          # Get trial codes from this trial cell
+          trialCodes = tcell.getArgs(*trial_order)
+
+          # Combine codes from each column into one list
+          row = idCodes + condCodes + trialCodes
+
+          # Join the list together using delimiter and add into data
+          data << row.join(delimiter)
         end
       end
     end
   end
+
+  # Open the file we want to print the output to
+  # ~ is a shortcut for the current user's home directory, ~/Desktop/ will put it
+  # on your desktop
+  output_file = File.new(File.expand_path(output_file), 'w')
+
+  # Write out data to file
+  puts "Writing to file..."
+  output_file.puts data
+  output_file.close
 
   puts "FINISHED"
 end
