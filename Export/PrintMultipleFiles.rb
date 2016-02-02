@@ -19,7 +19,7 @@ cond_order = ["onset", "offset", "condition"]
 trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhand", "raisinmissreach", "raisinclutchhand", "raisingrasphand", "raisinmissgrasp", "toyreachhand", "toymissreach", "toyclutchhand", "toygrasphand", "toymissgrasp"]
 
 ## Body
-require 'Datavyu_API.rb'
+raise "This script requires Datavyu version 1.3.5 or higher." unless checkDatavyuVersion('v:1.3.5')
 
 # Add functions to RCell
 class RCell
