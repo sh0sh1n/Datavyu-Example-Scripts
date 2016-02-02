@@ -21,29 +21,7 @@ trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhan
 ## Body
 raise "This script requires Datavyu version 1.3.5 or higher." unless checkDatavyuVersion('v:1.3.5')
 
-# Add functions to RCell
-class RCell
-  def getArgs(*codes)
-    vals = codes.map do |cname|
-      case(cname)
-      when /onset/
-        self.onset
-      when /offset/
-        self.offset
-      when /ordinal/
-        self.ordinal
-      else
-        @arglist.include?(cname)? self.get_arg(cname) : raise("Cell does not have code #{cname}")
-      end
-    end
-
-    return vals
-  end
-end
-
 begin
-  #$debug=true
-
   # Obtain a listing of files in the directory
   static_dir = Dir.new(File.expand_path(input_folder))
 
