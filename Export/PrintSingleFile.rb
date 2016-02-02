@@ -1,85 +1,71 @@
-require 'Datavyu_API.rb'
+# Print data from currently open spreadsheet to file.
 
-def getCellFromTime(col, time)
-  for cell in col.cells
-    if cell.onset <= time and cell.offset >= time
-      return cell
-    end
-  end
-  return nil
-end
+## Params
+output_file = '~/Desktop/output.csv'
+delimiter = ',' # separator between data
+print_header = true
 
-def printCellArgs(cell)
-  s = Array.new
-  s << cell.ordinal.to_s
-  s << cell.onset.to_s
-  s << cell.offset.to_s
-  for arg in cell.arglist
-    s << cell.get_arg(arg)
-  end
-  return s
-end
+# Set up the arguments that we want to print for each variable.
+# These must be exactly the argument names from Datavyu but with all
+# punctuation removed and made into all lowercase.
+# So Reach.Hand becomes reachhand
+# Test.date becomes testdate
+# Make a list for each column.
+id_order = ["study", "name", "tdate", "bdate", "sex", "sess", "ttrials"]
+cond_order = ["onset", "offset", "condition"]
+trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhand", "raisinmissreach", "raisinclutchhand", "raisingrasphand", "raisinmissgrasp", "toyreachhand", "toymissreach", "toyclutchhand", "toygrasphand", "toymissgrasp"]
+
+## Body
+raise "This script requires Datavyu version 1.3.5 or higher." unless checkDatavyuVersion('v:1.3.5')
 
 begin
-    #$debug=true
+  # Init an empty list to store lines of data
+  data = []
 
-    # Set up the arguments that we want to print for each variable.
-    # These must be exactly the argument names from openshapa but with all
-    # punctuation removed and made into all lowercase.
-    # So Reach.Hand becomes reachhand
-    # Test.date becomes testdate
-    # etc
-    # This is done by variable.
-    id_order = ["study","name","tdate", "bdate", "sex", "sess", "ttrials"]
-    cond_order = ["onset", "offset"]
-    trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhand", "raisinmissreach", "raisinclutchhand", "raisingrasphand", "raisinmissgrasp", "toyreachhand", "toymissreach", "toyclutchhand", "toygrasphand", "toymissgrasp"]
-
-    # Open the file we want to print the output to
-    # ~ is a shortcut for the current user's home directory, ~/Desktop/ will put it
-    # on your desktop
-    # Change this to whatever you want to name the output file
-    output_file = File.new(File.expand_path("~/Desktop/MB_Static_Output.txt"), 'w')
-
-    # Put the header together.
+  # Put the header together and add as first item to our data.
+  if(print_header)
     header = id_order + cond_order + trial_order
-    for h in header
-        output_file.write(h + "\t")
+    data << header.join(delimiter)
+  end
+
+  # Get the variables we want to print from the loaded file
+  id = getVariable("id")
+  cond = getVariable("cond")
+  trial = getVariable("trial")
+
+  # Loop over the cells in ID
+  for idcell in id.cells
+    # Get id codes frome this id cell
+    idCodes = idcell.getArgs(*id_order)
+
+    # Loop over the cells in condition which are contained by this idcell
+    for condcell in cond.cells.select{ |condcell| idcell.contains(condcell) }
+      # Get condition codes from this condition cell
+      condCodes = condcell.getArgs(*cond_order)
+
+      # Loop over the trial cells contained by this condcell
+      for tcell in trial.cells.select{ |trialcell| condcell.contains(trialcell) }
+        # Get trial codes from this trial cell
+        trialCodes = tcell.getArgs(*trial_order)
+
+        # Combine codes from each column into one list
+        row = idCodes + condCodes + trialCodes
+
+        # Join the list together using delimiter and add into data
+        data << row.join(delimiter)
+      end
     end
-    output_file.write("\n")
+  end
 
+  # Open the file we want to print the output to
+  # ~ is a shortcut for the current user's home directory, ~/Desktop/ will put it
+  # on your desktop
+  output_file = File.new(File.expand_path(output_file), 'w')
 
-    # Get the variables we want to print from the loaded file
-    id = getVariable("id")
-    cond = getVariable("cond")
-    trial = getVariable("trial")
+  # Write out data to file
+  puts "Writing to file..."
+  output_file.puts data
+  output_file.close
 
-    # Loop over the cells in ID
-    for idcell in id.cells
-        # Loop over the cells in condition
-        for condcell in cond.cells
-            # Make sure that the condition cell is INSIDE OF the ID cell
-            if idcell.onset <= condcell.onset and idcell.offset >= condcell.offset
-                # Loop over the trial cells
-                for tcell in trial.cells
-                    # Make sure that the trial cell is INSIDE OF the condition cell
-                    if condcell.onset < tcell.onset and condcell.offset >= tcell.offset
-                        # Print this ID's information
-                        print_args(idcell, output_file, id_order)
-                        # Print this Condition cell's information
-                        print_args(condcell, output_file, cond_order)
-                        # Print this Trial's information
-                        print_args(tcell, output_file, trial_order)
-                        # And write a newline to the output file so the next cell
-                        # is on its own line
-                        output_file.write("\n")
-                    end
-                end
-            end
-        end
-    end
-
-    puts "FINISHED"
-
-
-
+  puts "FINISHED"
 end
