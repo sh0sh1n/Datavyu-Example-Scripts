@@ -2,7 +2,7 @@
 # Use checkValidCodes2 since it supports regular expressions.
 
 ## Params
-date_format = /\A\d{2}\/\d{2}\/\d{4}\Z/ # dates must be formatted: ##/##/##
+date_format = /\A\d{2}\/\d{2}\/\d{4}\Z/ # dates must be formatted: ##/##/####
 # Associative mapping from column names to mappings from code names to valid values
 map = {
   'id' => {
