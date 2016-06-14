@@ -2,7 +2,7 @@
 
 ## Params
 # Which directory do we want to load files from?
-input_folder = '~/Desktop/input'
+input_folder = '~/Desktop/input' # '~' is shortcut for home directory; ~/Desktop will usually get your desktop folder
 output_file = '~/Desktop/output.csv'
 delimiter = ',' # separator between data
 print_header = true
@@ -70,8 +70,6 @@ begin
   end
 
   # Open the file we want to print the output to
-  # ~ is a shortcut for the current user's home directory, ~/Desktop/ will put it
-  # on your desktop
   output_file = File.new(File.expand_path(output_file), 'w')
 
   # Write out data to file
