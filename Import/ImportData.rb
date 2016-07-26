@@ -55,6 +55,7 @@ begin
   # Read lines from the input file and add data
   infile.readlines.each_with_index do |line, idx|
     tokens = line.split(delimiter)
+    next unless idx >= (start_row - 1)
 
     # Group data by column
     current_data = {}
