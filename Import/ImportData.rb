@@ -5,7 +5,7 @@ input_file = '~/Desktop/data.csv'
 csv_opts = {
   :col_sep => ','
 }
-start_row = 2 # Row to start reading data from; first line is row 1
+start_row = 2 # Row to start reading data from; first line is row 1 (use 2 to skip reading header if present)
 
 # Denote how columns from the input file will be represented in the datavyu spreadsheet
 # This is a nested associative array.
