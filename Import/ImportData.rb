@@ -2,8 +2,10 @@
 
 ## Params
 input_file = '~/Desktop/data.csv'
-delimiter = ','
-start_row = 1 # Row to start reading data from; first line is row 1
+csv_opts = {
+  :col_sep => ','
+}
+start_row = 2 # Row to start reading data from; first line is row 1
 
 # Denote how columns from the input file will be represented in the datavyu spreadsheet
 # This is a nested associative array.
@@ -37,6 +39,7 @@ code_map = {
 
 ## Body
 require 'Datavyu_API.rb'
+require 'csv'
 begin
   # Open input file for read
   infile = File.open(File.expand_path(input_file), 'r')
@@ -54,8 +57,9 @@ begin
 
   # Read lines from the input file and add data
   infile.readlines.each_with_index do |line, idx|
-    tokens = line.split(delimiter)
     next unless idx >= (start_row - 1)
+
+    tokens = CSV.parse_line(line, csv_opts)
 
     # Group data by column
     current_data = {}
@@ -64,9 +68,17 @@ begin
       current_data[column_name] = values
 
       # Make new cell if current data does not match previous data
-      if values != prev_data[column_name]
+      unless (values == prev_data[column_name]) || values.all?{ |x| x.nil? }
         ncell = columns[column_name].make_new_cell
-        pairs.each_pair{ |c, i| ncell.change_arg(c, tokens[i-1]) }
+        pairs.each_pair do |c, i|
+          value = tokens[i-1]
+          case(c)
+          when /(ordinal)|(onset)|(offset)/
+            ncell.change_arg(c, value.to_i)
+          else
+            ncell.change_arg(c, value)
+          end
+        end
       end
     end
 
