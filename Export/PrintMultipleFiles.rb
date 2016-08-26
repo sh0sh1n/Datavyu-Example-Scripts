@@ -22,8 +22,8 @@ trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhan
 raise "This script requires Datavyu version 1.3.5 or higher." unless checkDatavyuVersion('v:1.3.5')
 
 begin
-  # Obtain a listing of files in the directory
-  static_dir = Dir.new(File.expand_path(input_folder))
+  # Get list of opf files
+  infiles = get_datavyu_files_from(input_folder)
 
   # Init an empty list to store lines of data
   data = []
@@ -35,7 +35,7 @@ begin
   end
 
   # Loop over all Datavyu files (files in directory that end with ".opf" )
-  for file in static_dir.select{ |file| file.end_with?('.opf') }
+  for file in infiles
     puts "Opening " + file
     $db, $pj = loadDB(File.join(static_dir, file))
 
