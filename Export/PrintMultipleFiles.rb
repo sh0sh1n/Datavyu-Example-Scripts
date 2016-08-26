@@ -38,7 +38,8 @@ begin
   # Loop over all Datavyu files (files in directory that end with ".opf" )
   for file in infiles
     puts "Opening " + file
-    $db, $pj = loadDB(File.join(input_folder, file))
+    input_path = File.join(File.expand_path(input_folder), file)
+    $db, $pj = loadDB(input_path)
 
     # Get the variables we want to print from the loaded file
     id = getVariable("id")
