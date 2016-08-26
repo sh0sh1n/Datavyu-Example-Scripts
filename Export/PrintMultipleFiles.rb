@@ -20,6 +20,7 @@ trial_order = ["trialnum", "onset", "offset", "unit", "turndir", "raisinreachhan
 
 ## Body
 raise "This script requires Datavyu version 1.3.5 or higher." unless checkDatavyuVersion('v:1.3.5')
+require 'Datavyu_API.rb'
 
 begin
   # Get list of opf files
