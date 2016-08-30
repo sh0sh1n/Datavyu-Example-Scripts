@@ -60,13 +60,13 @@ begin
 	puts dv_files if verbose > 1
 
 	backupDB = $db
-	backupProj = $proj
+	backupProj = $pj
 	for file in dv_files
 		puts "\n"
 		puts "=" * 10
 		puts "Working on #{file}" if verbose > 0
 		begin
-			$db,$proj = loadDB(File.join(dv_dir,file))
+			$db,$pj = loadDB(File.join(dv_dir,file))
 			load(script)
 			saveDB(File.join(dv_dir,file))
 		rescue StandardError => e
@@ -77,11 +77,11 @@ begin
 		end
 	end
 	$db = backupDB
-	$proj = backupProj
+	$pj = backupProj
 rescue StandardError => e
 	puts e.message
 	puts e.backtrace
 ensure
 	$db = backupDB unless backupDB.nil?
-	$proj = backupProj unless backupProj.nil?
+	$pj = backupProj unless backupProj.nil?
 end
