@@ -1,9 +1,10 @@
 # Import data from plaintext file.
 
 ## Params
-input_file = '~/Desktop/data.csv'
+input_file = :prompt#'~/Desktop/data.csv'
+col_sep = ','
 csv_opts = {
-  :col_sep => ','
+  :col_sep => col_sep
 }
 start_row = 2 # Row to start reading data from; first line is row 1 (use 2 to skip reading header if present)
 
@@ -40,9 +41,34 @@ code_map = {
 ## Body
 require 'Datavyu_API.rb'
 require 'csv'
+java_import javax::swing::JFileChooser
+java_import javax::swing::filechooser::FileNameExtensionFilter
 begin
-  # Open input file for read
-  infile = File.open(File.expand_path(input_file), 'r')
+  # If input_file is :prompt, open up a file chooser window to let user select input file.
+  if(input_file == :prompt)
+    txtFilter = FileNameExtensionFilter.new('Text file','txt')
+    csvFilter = FileNameExtensionFilter.new('CSV file', 'csv')
+    jfc = JFileChooser.new()
+    jfc.setAcceptAllFileFilterUsed(false)
+    jfc.setFileFilter(csvFilter)
+    jfc.addChoosableFileFilter(txtFilter)
+    jfc.setMultiSelectionEnabled(false)
+    jfc.setDialogTitle('Select transcript text file.')
+
+    ret = jfc.showOpenDialog(javax.swing.JPanel.new())
+
+    if ret != JFileChooser::APPROVE_OPTION
+      puts "Invalid selection. Aborting."
+      return
+    end
+
+    scriptFile = jfc.getSelectedFile()
+    fn = scriptFile.getAbsolutePath()
+    infile = File.open(fn, 'r')
+  else
+    # Open input file for read
+    infile = File.open(File.expand_path(input_file), 'r')
+  end
 
   # Set up spreadsheet with columns from code_map
   columns = {}
