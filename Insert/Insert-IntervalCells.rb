@@ -9,8 +9,14 @@ column_code_map = {
 }
 reference_column_name = 'my_reference_column' # change to name of column that spans coding region
 interval_size = 10 * 1000 # duration of each interval cell
-reliability_amount = 4 # choose rel cells based on this number e.g. every 4th
 
+# Copies blank primary coder's cells at the specified interval; e.g. 4 to copy every fourth primary cell
+reliability_interval = 4
+
+# Specifies starting point of copying primary coder's cells. Values should be in range [0..reliability_interval-1]
+# NOTE: formula for selection is: (primary_cell_ordinal) MOD (reliability_interval) =? reliability_start
+# Use 1 to start selection at first cell.
+reliability_start = 1
 
 ## Body
 require 'Datavyu_API.rb'
@@ -39,12 +45,12 @@ end
 columns.values.each{ |x| setVariable(x) }
 columns.keys.each{ |x| columns[x] = getVariable(x) } # We need to pull the columns from Datavyu so that the ordinal numbers are updated
 
-# Insert reliability columns and add cells based on reliability_amount
+# Insert reliability columns and add cells based on reliability_interval
 column_code_map.each_pair do |cname, ccodes|
   # Insert the new column
   rel_col = createNewColumn("#{cname}_rel", *ccodes)
   pri_col = columns[cname]
-  cand_cells = pri_col.cells.select{ |x| x.ordinal % reliability_amount == 1 } # use (0 1 2 3) to choose which cell is the first one
+  cand_cells = pri_col.cells.select{ |x| x.ordinal % reliability_interval == reliability_start }
 
   # Insert cells for rel coding
   cand_cells.each do |cc|
