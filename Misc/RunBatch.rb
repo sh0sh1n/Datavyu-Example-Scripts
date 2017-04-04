@@ -52,10 +52,7 @@ begin
 	puts dv_dir if verbose > 1
 	dv_files = []
 	filter = (recurse)? File.join('**','*.opf') : '*.opf'
-	Dir.chdir(dv_dir){
-		|dir|
-		dv_files = Dir.glob(filter)
-	}
+	dv_files = get_datavyu_files_from(dv_dir, recurse)
 
 	puts dv_files if verbose > 1
 
@@ -66,9 +63,9 @@ begin
 		puts "=" * 10
 		puts "Working on #{file}" if verbose > 0
 		begin
-			$db,$pj = loadDB(File.join(dv_dir,file))
+			$db,$pj = load_db(File.join(dv_dir,file))
 			load(script)
-			saveDB(File.join(dv_dir,file))
+			save_db(File.join(dv_dir,file))
 		rescue StandardError => e
 			puts "Script failed on file #{file}"
 			puts e.message

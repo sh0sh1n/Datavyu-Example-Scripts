@@ -21,11 +21,11 @@ reliability_start = 1
 ## Body
 require 'Datavyu_API.rb'
 
-ref_col = getVariable(reference_column_name)
+ref_col = get_column(reference_column_name)
 
 columns = {}
 column_code_map.each_pair do |cname, ccodes|
-  columns[cname] = createNewColumn(cname, *ccodes)
+  columns[cname] = new_column(cname, *ccodes)
 end
 
 ref_col.cells.each do |rc|
@@ -42,13 +42,13 @@ ref_col.cells.each do |rc|
     end
   end
 end
-columns.values.each{ |x| setVariable(x) }
-columns.keys.each{ |x| columns[x] = getVariable(x) } # We need to pull the columns from Datavyu so that the ordinal numbers are updated
+columns.values.each{ |x| set_column(x) }
+columns.keys.each{ |x| columns[x] = get_column(x) } # We need to pull the columns from Datavyu so that the ordinal numbers are updated
 
 # Insert reliability columns and add cells based on reliability_interval
 column_code_map.each_pair do |cname, ccodes|
   # Insert the new column
-  rel_col = createNewColumn("#{cname}_rel", *ccodes)
+  rel_col = new_column("#{cname}_rel", *ccodes)
   pri_col = columns[cname]
   cand_cells = pri_col.cells.select{ |x| x.ordinal % reliability_interval == reliability_start }
 
@@ -58,7 +58,7 @@ column_code_map.each_pair do |cname, ccodes|
     ncell.onset = cc.onset
     ncell.offset = cc.offset
   end
-  setVariable(rel_col)
+  set_column(rel_col)
 end
 
 puts "Finished!"

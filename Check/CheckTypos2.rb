@@ -1,5 +1,5 @@
 # Check valid codes in multiple columns.
-# Use checkValidCodes2 since it supports regular expressions.
+# Use check_valid_codes2 since it supports regular expressions.
 
 ## Params
 output_file = '~/Desktop/check.txt'

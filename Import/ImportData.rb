@@ -98,12 +98,7 @@ begin
         ncell = columns[column_name].make_new_cell
         pairs.each_pair do |c, i|
           value = tokens[i-1]
-          case(c)
-          when /(ordinal)|(onset)|(offset)/
-            ncell.change_arg(c, value.to_i)
-          else
-            ncell.change_arg(c, value)
-          end
+          ncell.change_code(c, value.to_i)
         end
       end
     end
@@ -111,5 +106,5 @@ begin
     prev_data = current_data
   end
 
-  columns.values.each{ |x| setVariable(x) }
+  columns.values.each{ |x| set_column(x) }
 end
