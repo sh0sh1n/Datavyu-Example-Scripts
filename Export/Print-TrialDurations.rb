@@ -25,7 +25,7 @@ infiles.each do |infile|
 
   # Iterate over trial cells
   trial_cells.each do |tc|
-    row = [tc.ordinal tc.duration tc.condition tc.result] # get values for row of data
+    row = [tc.ordinal, tc.duration, tc.condition, tc.result] # get values for row of data
     data << row.join(',') # add row of data
   end
 end
