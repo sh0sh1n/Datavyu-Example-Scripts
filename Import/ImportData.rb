@@ -98,7 +98,8 @@ begin
         ncell = columns[column_name].make_new_cell
         pairs.each_pair do |c, i|
           value = tokens[i-1]
-          ncell.change_code(c, value.to_i)
+          value = value.to_i if %w(ordinal onset offset).include?(c) # convert to int for ordinal, onset, offset values
+          ncell.change_code(c, value)
         end
       end
     end
