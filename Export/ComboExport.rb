@@ -21,6 +21,7 @@ static_columns = %w(id)
 nested_columns = %w()
 sequential_columns = %w(cond diaryrecode place motorbout sitassess)
 blank_value = '' # code to put in for missing cells
+delimiter = ','
 
 # Set to true to force a row to be printed for each innermost-nested cell.
 # Default behavior is to skip nested cells that don't have any data for sequential cells.
@@ -35,7 +36,7 @@ header = (static_columns + nested_columns + sequential_columns).map do |colname|
   code_map[colname].map{ |codename| "#{colname}_#{codename}" }
 end
 header.flatten!
-data << header.join(',')
+data << header.join(delimiter)
 
 # Init arrays of default values.
 default_data = {}
@@ -79,7 +80,7 @@ infiles.each do |infile|
         seq_data[scol] = scell.get_codes(code_map[scol])
 
         row = static_data + outer_data + inner_data + seq_data.values.flatten
-        data << row.join(',')
+        data << row.join(delimiter)
         rows_added += 1
       end
     end
@@ -110,7 +111,7 @@ infiles.each do |infile|
           seq_data[scol] = scell.get_codes(code_map[scol])
 
           row = static_data + outer_data + inner_data + seq_data.values.flatten
-          data << row.join(',')
+          data << row.join(delimiter)
           rows_added += 1
         end
       end
@@ -118,7 +119,7 @@ infiles.each do |infile|
       # Edge case for no nested sequential cell(s).
       if(rows_added == 0 && ensure_rows_per_nested_cell)
         row = static_data + outer_data + inner_data + seq_data.values.flatten
-        data << row.join(',')
+        data << row.join(delimiter)
         rows_added +=1
       end
     end
