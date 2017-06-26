@@ -2,24 +2,24 @@
 # Iterate over nested cells.
 # For each nested cell "N", iterate over list of "sequential columns" and
 # print rows of data for each cell "S" in that column nested inside "N".
-# For example:
+# For example (Ci is the ith code in the cell):
 # row1 : T1C1, T1C2, T2C1, N1C1, N2C1, N2C2, S1C1, S1C2, <blank>, <blank>
 # row2 : T1C1, T1C2, T2C1, N1C1, N2C1, N2C2, S1C1, S1C2, <blank>, <blank>
 # row3 : T1C1, T1C2, T2C1, N1C1, N2C1, N2C2, <blank>, <blank>, S2C1, S2C2
 
 ## Parameters
-input_folder = '~/Desktop/TajikExport'
-output_file = '~/Desktop/Culture-Tajik-IDCond.csv'
+input_folder = '~/Desktop/Datavyu'
+output_file = '~/Desktop/Data.csv'
 code_map = {
   'id' => %w(study region agegrp id sex tdate bdate),
   'cond' => %w(ordinal onset offset task),
-  'place' => %w(ordinal onset offset  clothes leg torso arm feed rock fuss resist bottom top opaquetop segs seq),
+  'place' => %w(ordinal onset offset  clothes leg),
   'motorbout' => %w(ordinal onset offset none tri sit belly hk_hf bumshuf stand cruise walk),
   'sitassess' => %w(ordinal onset offset sittype sitend)
 }
 static_columns = %w(id)
 nested_columns = %w()
-sequential_columns = %w(cond diaryrecode place motorbout sitassess)
+sequential_columns = %w(cond place motorbout sitassess)
 blank_value = '' # code to put in for missing cells
 delimiter = ','
 
