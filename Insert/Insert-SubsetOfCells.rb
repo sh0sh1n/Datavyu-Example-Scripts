@@ -44,7 +44,7 @@ selected_cells.each do |sc|
 
   # Copy over code values as necessary.
   codes_to_keep.each do |code|
-    ncell.change_code(code, sc.get_code(code))
+    ncell.change_code(code, sc.get_code(code)) # copy over value from existing cell.
   end
 
 end
