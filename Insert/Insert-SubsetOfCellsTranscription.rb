@@ -22,9 +22,18 @@ new_column_codes = codes_to_keep + additional_new_codes
 # Specify the selection condition to check on each cell in the existing column.
 # This example condition selects cells such that the content code of cell contains
 # any of the keywords in my_list.
-my_list = %w(mouth hand milk)
+# my_list = %w(mouth hand milk)
+# selection_condition = lambda do |cell|
+#   my_list.any?{ |keyword| cell.content.include?(keyword) }
+# end
+
+# This selection condition is similar to prior. However, this will only match
+# whole words not part of words. It will remove non-word characters (e.g., punctuations)
+# from the end of words in the transcript.
 selection_condition = lambda do |cell|
-  my_list.any?{ |keyword| cell.content.include?(keyword) }
+  my_list.any? do |keyword|
+    cell.content.split(' ').any?{ |x| x.gsub(/\W+$/, '') == keyword }
+  end
 end
 
 ## Body
