@@ -20,7 +20,7 @@ map = {
     'cond_ab' => ['a', 'b'] # condition can be either 'a' or 'b'
   },
   'trial' => { # for column 'trial'
-    'trialnum' => integer_format
+    'trialnum' => integer_format,
     'result_xyz' => ['x', 'y', 'z'] # result must be one of 3 values
   }
 }
