@@ -3,7 +3,7 @@
 
 ## Parameters
 # Define the names and associated codes of new columns to create.
-language_codes = %w(feature shape dimension)
+language_codes = %w(content)
 new_columns = {
   'parentlanguage' => language_codes,
   'childlanguage' => language_codes
@@ -15,19 +15,21 @@ new_columns = {
 # Nesting order:
 #   source_columns -> source_codes -> code_values -> destination_column -> source_to_destination_code_mapping
 # NOTE: destination columns are enforced to be one of the newly created columns defined in new_columns parameter.
-# TODO: simplify this structure if possible
 copy_rules = {
   'transcribe' => {                     # source column
     'source' => {                       # source code to check
       'm' => {                          # if souce code is this value
         'parentlanguage' => {           # add a cell to this column
           'onset' => 'onset',           # copy onset value
-          'offset' => 'offset'          # copy offset value
+          'offset' => 'offset',         # copy offset value
+          'content' => 'content'        # copy content value
+        }
       },
       'c' => {
         'childlanguage' => {
           'onset' => 'onset',
-          'offset' => 'offset'
+          'offset' => 'offset',
+          'content' => 'content'
         }
       }
     }
