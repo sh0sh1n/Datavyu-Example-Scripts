@@ -150,7 +150,7 @@ transcript_col.cells.each do |tc|
 	elsif(transcript == 'b')
 		transcript = '&=babble'
 	end
-	
+
 	# Append a period to transcript unless it has ending.
 	transcript += ' .' unless %w(. ? !).any?{ |x| transcript.end_with?(x) }
 
@@ -164,10 +164,10 @@ output << '@End'
 
 # Prompt user for output file.
 puts "Writing data to file..."
-rbFilter = FileNameExtensionFilter.new('Chat file','cha')
+chaFilter = FileNameExtensionFilter.new('Chat file','cha')
 jfc = JFileChooser.new()
 jfc.setAcceptAllFileFilterUsed(false)
-jfc.setFileFilter(rbFilter)
+jfc.setFileFilter(chaFilter)
 jfc.setMultiSelectionEnabled(false)
 jfc.setDialogTitle('Select file to export data to.')
 
