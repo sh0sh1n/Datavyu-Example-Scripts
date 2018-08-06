@@ -22,7 +22,7 @@ code_map = {
 static_columns = %w[id]
 nested_columns = %w[]
 sequential_columns = %w[cond place motorbout sitassess]
-linked_columns = %w[linked_col1 linked_col2]
+linked_columns = %w[linked_col1]
 
 # Specify arbitrary links for linked columns.
 # Each linked column must have a function that takes as input:
