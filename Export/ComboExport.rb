@@ -6,6 +6,7 @@
 # row1 : T1C1, T1C2, T2C1, N1C1, N2C1, N2C2, S1C1, S1C2, <blank>, <blank>
 # row2 : T1C1, T1C2, T2C1, N1C1, N2C1, N2C2, S1C1, S1C2, <blank>, <blank>
 # row3 : T1C1, T1C2, T2C1, N1C1, N2C1, N2C2, <blank>, <blank>, S2C1, S2C2
+# Also supports arbitrary printing of data from columns based on linking rules.
 
 ## Parameters
 input_folder = '~/Desktop/Datavyu'
@@ -22,6 +23,12 @@ static_columns = %w[id]
 nested_columns = %w[]
 sequential_columns = %w[cond place motorbout sitassess]
 linked_columns = %w[linked_col1 linked_col2]
+
+# Specify arbitrary links for linked columns.
+# Each linked column must have a function that takes as input:
+#   1) list of cells in current row of data
+#   2) list of cells in the linked column
+# and returns the cell from the linked column that should be printed for this row.
 links = {
   'linked_col1' => lambda do |row_cells, col_cells|
     ref_cell = row_cells.find { |x| x.parent == 'motorbout' }
