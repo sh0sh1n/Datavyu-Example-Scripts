@@ -92,8 +92,15 @@ infiles.each do |infile|
       seq_cells.each do |scell|
         seq_data[scol] = scell.get_codes(code_map[scol])
 
+        # Get data from bound/linked columns
+        linked_columns.each do |bcol|
+          rule = bindings[bcol]
+          bcell = rule.call([scell], columns[bcol].cells)
+          linked_data[bcol] = bcell.get_codes(code_map[bcol])
+        end
+
         row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
-        data << row.join(',')
+        data << row.join(delimiter)
 
         rows_added += 1
       end
@@ -136,7 +143,7 @@ infiles.each do |infile|
           end
 
           row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
-          data << row.join(',')
+          data << row.join(delimiter)
 
           rows_added += 1
         end
@@ -146,7 +153,7 @@ infiles.each do |infile|
       next unless rows_added == 0 && ensure_rows_per_nested_cell
 
       row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
-      data << row.join(',')
+      data << row.join(delimiter)
 
       rows_added += 1
     end
