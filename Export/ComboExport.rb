@@ -117,7 +117,7 @@ infiles.each do |infile|
         raise "Can't find nesting cell in column #{ocol} for cell #{icell.ordinal} in column #{inner_col}." if ocell.nil?
         ocell
       end
-      outer_data = outer_cells.empty? ? [] : outer_cells.map { |x| x.get_codes(code_map[ocol]) }.flatten!
+      outer_data = outer_cells.empty? ? [] : outer_cells.map { |x| x.get_codes(code_map[x.parent]) }.flatten!
 
       # Init blank data hash so that data for this column is placed properly.
       seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
