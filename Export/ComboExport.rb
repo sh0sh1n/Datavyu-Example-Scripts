@@ -1,3 +1,4 @@
+# Flexible export script.
 # Print single-cell columns "T" as repeated columns for file.
 # Iterate over nested cells.
 # For each nested cell "N", iterate over list of "sequential columns" and
@@ -139,18 +140,19 @@ infiles.each do |infile|
       end
     end
   else
-
-    inner_col = nested_columns.last
-    outer_cols = nested_columns[0..-2]
-    columns[inner_col].cells.each do |icell|
-      inner_data = icell.get_codes(code_map[inner_col])
-
-      outer_cells = outer_cols.map do |ocol|
-        ocell = columns[ocol].cells.find { |x| x.contains(icell) }
-        raise "Can't find nesting cell in column #{ocol} for cell #{icell.ordinal} in column #{inner_col}." if ocell.nil?
-        ocell
+    # Get rows of cells for nested columns
+    nested_table = nested_print(*nested_columns)
+    # Iterate over the cell rows
+    nested_table.each do |nested_row|
+      # Fill out nested data by fetching the code values from the cells in each row
+      nested_data = default_data.select{ |k, _v| nested_columns.include?(k) }
+      nested_row.each do |cell|
+        col = cell.parent
+        nested_data[col] = cell.get_codes(code_map[col])
       end
-      outer_data = outer_cells.empty? ? [] : outer_cells.map { |x| x.get_codes(code_map[x.parent]) }.flatten!
+
+      # The innermost cell is in the column at the end of the nested columns list
+      innermost_cell = nested_row.last
 
       # Init blank data hash so that data for this column is placed properly.
       seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
@@ -164,18 +166,18 @@ infiles.each do |infile|
         linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
 
         # Iterate over sequential cells nested inside inner cell.
-        seq_cells = columns[scol].cells.select { |x| icell.contains(x) }
+        seq_cells = columns[scol].cells.select { |x| innermost_cell.contains(x) }
         seq_cells.each do |scell|
           seq_data[scol] = scell.get_codes(code_map[scol])
 
           # Get data from bound/linked columns
           linked_columns.each do |bcol|
             rule = links[bcol]
-            bcell = rule.call(outer_cells + [icell, scell], columns[bcol].cells)
+            bcell = rule.call(outer_cells + [innermost_cell, scell], columns[bcol].cells)
             linked_data[bcol] = bcell.get_codes(code_map[bcol]) unless bcell.nil?
           end
 
-          row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
+          row = static_data + linked_data.values.flatten + nested_data.values.flatten + seq_data.values.flatten
           data << row.join(delimiter)
 
           rows_added += 1
@@ -185,7 +187,7 @@ infiles.each do |infile|
       # Edge case for no nested sequential cell(s).
       next unless rows_added == 0 && ensure_rows_per_nested_cell
 
-      row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
+      row = static_data + linked_data.values.flatten + nested_data.values.flatten + seq_data.values.flatten
       data << row.join(delimiter)
 
       rows_added += 1
