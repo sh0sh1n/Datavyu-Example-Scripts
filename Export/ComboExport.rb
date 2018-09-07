@@ -45,6 +45,39 @@ ensure_rows_per_nested_cell = true
 ## Body
 require 'Datavyu_API.rb'
 
+# Simple method to print nested columns.
+# Returns a list of list where the inner list is a row of cells corresponding to a line of data to print out.
+def nested_print(*columns)
+  columns.map!{ |x| get_column(x) if x.class == ''.class }
+
+  return nested_print_helper(columns, [], [])
+end
+
+# Recursive method to add
+def nested_print_helper(columns, row_cells, table)
+  col = columns.first
+
+  if col.nil?
+    table << row_cells
+    return table
+  end
+
+  cells = col.cells
+  oc = row_cells.last
+  cells = cells.select{ |x| oc.contains(x) } unless oc.nil?
+
+  if cells.empty?
+    table << row_cells
+    return table
+  end
+
+  cells.each do |cell|
+    table = nested_print_helper(columns[1..-1], row_cells + [cell], table)
+  end
+
+  return table
+end
+
 data = []
 # Header order is: static, bound, nested, sequential
 header = (static_columns + linked_columns + nested_columns + sequential_columns).map do |colname|
