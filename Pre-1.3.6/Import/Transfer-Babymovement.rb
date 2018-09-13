@@ -3,7 +3,7 @@
 source_file = '~/Desktop/Source.opf'
 dest_file = '~/Desktop/Dest.opf'
 
-require '~/scriptrepo/datavyu_api.rb'
+require 'Datavyu_API.rb'
 
 set_column('babymovement_backup', get_column('babymovement'))
 set_column('rel_block_babymovement_backup', get_column('rel_blocks_babymovement'))

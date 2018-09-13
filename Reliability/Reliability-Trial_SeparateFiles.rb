@@ -13,7 +13,7 @@ match_code = 'ordinal'
 time_threshold = 100 # leeway in milliseconds to allow for onset/offset
 
 ## Body
-require '~/scriptrepo/datavyu_api.rb'
+require 'Datavyu_API.rb'
 
 # Find the matching datavyu file for this spreadsheet.
 curr_file = $db.getName()

@@ -10,7 +10,7 @@ output_folder = '~/Desktop'
 data_folder = '~/Desktop/Data'
 
 ## Body
-require '~/scriptrepo/datavyu_api.rb'
+require 'Datavyu_API.rb'
 require 'csv'
 
 begin
