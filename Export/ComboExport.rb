@@ -10,8 +10,11 @@
 # Also supports arbitrary printing of data from columns based on linking rules.
 
 ## Parameters
-input_folder = '~/Desktop/Datavyu'
-output_file = '~/Desktop/Data.csv'
+input_folder = '~/Desktop/Datavyu' # folder containing .opf files
+output_file = '~/Desktop/Data.csv'  # file to write the data to
+
+# This is a listing of all columns and the codes from those columns that should
+# be exported.
 code_map = {
   'id' => %w[study region agegrp id sex tdate bdate],
   'cond' => %w[ordinal onset offset task],
@@ -20,9 +23,24 @@ code_map = {
   'sitassess' => %w[ordinal onset offset sittype sitend],
   'linked_col1' => %w[ordinal onset offset]
 }
+
+# Static columns are columns with a single cell. Code values from the first cell
+# will be printed.
 static_columns = %w[id]
+
+# Nested columns lists, in order, the hierarchical nesting of columns.
+# Cells in the second column will always be nested temporally within cells of
+# the first column. Cells in the third column will always be nested temporally
+# within cells of the second column. Etc...
+# The last column is this list is the innermost nested column.
 nested_columns = %w[]
+
+# Sequential columns lists columms that should be printed on separate rows.
+# If there is at least one nested_column specified, cells from the sequential
+# columns will be printed only if they are nested inside the innermost nested cell.
 sequential_columns = %w[cond place motorbout sitassess]
+
+# Linked columns allows printing cells using a custom matching function.
 linked_columns = %w[linked_col1]
 
 # Specify arbitrary links for linked columns.
