@@ -9,6 +9,7 @@
 
 ## Parameters
 session_column_name = 'session'
+cell_select_function = lambda{ |x| x.task == 'a' } # selection function for session column; set nil to select all
 block_column_name = "rel_blocks_movement"
 block_column_codes = %w(x) #todo: allow for meaningful codes in block col
 fraction = 0.25	# fraction of the session cell to use for each block cell
@@ -32,7 +33,13 @@ end
 
 block_column = new_column(block_column_name, *block_column_codes)
 
-session_cells.each do |session_cell|
+if cell_select_function.nil?
+	selected_cells = session_cells
+else
+	selected_cells = session_cells.select(&cell_select_function)
+end
+
+selected_cells.each do |session_cell|
 	new_cell = block_column.new_cell
 	new_cell_duration = (fraction*session_cell.duration).round
 	new_cell.onset = rand(session_cell.duration - new_cell_duration)+session_cell.onset
