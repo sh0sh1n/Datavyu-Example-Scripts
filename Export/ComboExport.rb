@@ -135,20 +135,20 @@ infiles.each do |infile|
     # Iterate over sequential columns.
     rows_added = 0
     sequential_columns.each do |scol|
-      # Reset data hash so values are not carried over.
-      seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
-      linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
-
       # Iterate over sequential cells.
       seq_cells = columns[scol].cells
       seq_cells.each do |scell|
+        # Reset data hash so values are not carried over.
+        seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
+        linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
+
         seq_data[scol] = scell.get_codes(code_map[scol])
 
         # Get data from bound/linked columns
         linked_columns.each do |bcol|
-          rule = bindings[bcol]
+          rule = links[bcol]
           bcell = rule.call([scell], columns[bcol].cells)
-          linked_data[bcol] = bcell.get_codes(code_map[bcol])
+          linked_data[bcol] = bcell.get_codes(code_map[bcol]) unless bcell.nil?
         end
 
         row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
@@ -179,13 +179,13 @@ infiles.each do |infile|
       # Iterate over sequential columns.
       rows_added = 0
       sequential_columns.each do |scol|
-        # Reset data hash so values are not carried over.
-        seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
-        linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
-
         # Iterate over sequential cells nested inside inner cell.
         seq_cells = columns[scol].cells.select { |x| innermost_cell.contains(x) }
         seq_cells.each do |scell|
+          # Reset data hash so values are not carried over.
+          seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
+          linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
+
           seq_data[scol] = scell.get_codes(code_map[scol])
 
           # Get data from bound/linked columns
