@@ -6,24 +6,20 @@ output_folder = '~/Desktop/CHAT/' # :prompt
 
 # Outer key is the ID in CHAT, inner keys are attributes.
 # Currenlty handled attributes:
-# :location - a Hash with following keys:
-# => 	:column = Name of the column as a String (required)
-# => 	:code = Name of the code in the column with the transcription (required)
-# =>  :cell_filter = function to apply to select cells in the column; omit to export all cells
+# 	:column = Name of the column as a String (required)
+#  	:code = Name of the code in the column with the transcription (required)
+#   :cell_filter = function to apply to select cells in the column; omit to export all cells
 # :
 source_map = { # mapping from transcript_source codes to 3-letter speaker ids
 	'PAR'	=>	{
-		:location => {
-			:column => 'Parent_Utterance',
-			:code => 'transcript',
-			:cell_filter => nil,
-		},
+		:column => 'Parent_Utterance',
+		:code => 'transcript',
+		:cell_filter => nil,
 	},
 	'CHI'	=>	{
-		:location => {
-			:column => 'Child_Vocalizations',
-			:code => 'transcript',
-		}
+		:column => 'Child_Vocalizations',
+		:code => 'transcript',
+		:cell_filter => ->(x){ x.ordinal.even? } # export only the even numbered cells
 	}
 }
 
@@ -87,13 +83,13 @@ output << '@Begin'
 puts "Adding transcription data..."
 data = Hash.new { |h, k| h[k] = [] } # collect all the output lines and sort them by onset time before writing to file.
 source_map.each_pair do |id, info|
-	col = get_column(info[:location][:column])
-	filter = info[:location][:cell_filter]
+	col = get_column(info[:column])
+	filter = info[:cell_filter]
 	cells = col.cells
 	cells.select!(&filter) unless filter.nil? # apply filter if present
 
 	cells.each do |c|
-		transcript = c.get_code(info[:location][:code]).strip
+		transcript = c.get_code(info[:code]).strip
 
 		# Replace using substitutions hash
 		substitutions.each_pair { |pattern, replacement| transcript.gsub!(pattern, replacement) }
