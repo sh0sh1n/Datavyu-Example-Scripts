@@ -163,11 +163,13 @@ infiles.each do |infile|
     # Iterate over the cell rows
     nested_table.each do |nested_row|
       # Fill out nested data by fetching the code values from the cells in each row
-      nested_data = default_data.select{ |k, _v| nested_columns.include?(k) }
-      nested_row.each do |cell|
-        col = cell.parent
-        nested_data[col] = cell.get_codes(code_map[col])
-      end
+      nested_data = nested_row.zip(nested_columns).map do |cell, colname|
+        if cell.nil?
+          default_data[colname]
+        else
+          cell.get_codes(code_map[colname])
+        end
+      end.flatten
 
       # The innermost cell is in the column at the end of the nested columns list
       innermost_cell = nested_row.last
@@ -195,7 +197,7 @@ infiles.each do |infile|
             linked_data[bcol] = bcell.get_codes(code_map[bcol]) unless bcell.nil?
           end
 
-          row = static_data + linked_data.values.flatten + nested_data.values.flatten + seq_data.values.flatten
+          row = static_data + linked_data.values.flatten + nested_data+ seq_data.values.flatten
           data << row.join(delimiter)
 
           rows_added += 1
