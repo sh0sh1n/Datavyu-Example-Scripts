@@ -193,7 +193,7 @@ infiles.each do |infile|
           # Get data from bound/linked columns
           linked_columns.each do |lcol|
             rule = links[lcol]
-            bcell = rule.call(nested_rows + [scell], columns[lcol].cells)
+            bcell = rule.call(nested_row + [scell], columns[lcol].cells)
             linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
           end
 
@@ -205,12 +205,12 @@ infiles.each do |infile|
       end
 
       # Edge case for no nested sequential cell(s).
-      next unless rows_added == 0 && ensure_rows_per_nested_cell
+      next unless rows_added.zero? && ensure_rows_per_nested_cell
 
       # Get data from bound/linked columns
       linked_columns.each do |lcol|
         rule = links[lcol]
-        bcell = rule.call(nested_rows + [scell], columns[lcol].cells)
+        bcell = rule.call(nested_row, columns[lcol].cells)
         linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
       end
 
