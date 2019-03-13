@@ -207,7 +207,7 @@ infiles.each do |infile|
       # Edge case for no nested sequential cell(s).
       next unless rows_added == 0 && ensure_rows_per_nested_cell
 
-      row = static_data + linked_data.values.flatten + nested_data.values.flatten + seq_data.values.flatten
+      row = static_data + linked_data.values.flatten + nested_data + seq_data.values.flatten
       data << row.join(delimiter)
 
       rows_added += 1
