@@ -145,10 +145,10 @@ infiles.each do |infile|
         seq_data[scol] = scell.get_codes(code_map[scol])
 
         # Get data from bound/linked columns
-        linked_columns.each do |bcol|
-          rule = links[bcol]
-          bcell = rule.call([scell], columns[bcol].cells)
-          linked_data[bcol] = bcell.get_codes(code_map[bcol]) unless bcell.nil?
+        linked_columns.each do |lcol|
+          rule = links[lcol]
+          bcell = rule.call([scell], columns[lcol].cells)
+          linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
         end
 
         row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
@@ -191,10 +191,10 @@ infiles.each do |infile|
           seq_data[scol] = scell.get_codes(code_map[scol])
 
           # Get data from bound/linked columns
-          linked_columns.each do |bcol|
-            rule = links[bcol]
-            bcell = rule.call(outer_cells + [innermost_cell, scell], columns[bcol].cells)
-            linked_data[bcol] = bcell.get_codes(code_map[bcol]) unless bcell.nil?
+          linked_columns.each do |lcol|
+            rule = links[lcol]
+            bcell = rule.call(nested_rows + [scell], columns[lcol].cells)
+            linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
           end
 
           row = static_data + linked_data.values.flatten + nested_data+ seq_data.values.flatten
@@ -206,6 +206,13 @@ infiles.each do |infile|
 
       # Edge case for no nested sequential cell(s).
       next unless rows_added == 0 && ensure_rows_per_nested_cell
+
+      # Get data from bound/linked columns
+      linked_columns.each do |lcol|
+        rule = links[lcol]
+        bcell = rule.call(nested_rows + [scell], columns[lcol].cells)
+        linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
+      end
 
       row = static_data + linked_data.values.flatten + nested_data + seq_data.values.flatten
       data << row.join(delimiter)
