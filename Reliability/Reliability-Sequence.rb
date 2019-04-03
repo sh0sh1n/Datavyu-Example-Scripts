@@ -1,11 +1,28 @@
 ## Parameters
 pri_column_name = 'pri'
 rel_column_name = 'rel'
+blocks_column_name = 'rel_blocks'
 disagree_column_name = 'disagree'
-codes_to_check = %w(code)
+codes_to_check = %w[code]
 window_size = 500
 output_file = '~/Desktop/reliability_code.csv'
 delimiter = ','
+
+# Function to compare two coders' cells
+# Higher score means the cells are more closely matched
+score_function = lambda do |window, pri, rel|
+  return -1 if pri.nil? || rel.nil?
+  return -100 if (pri.onset - rel.onset).abs > window
+
+  score = 0
+  codes_to_check.each do |c|
+    if pri.get_code(c) == rel.get_code(c)
+      score += 5
+    end
+  end
+  return score
+end
+windowed_score_fn = score_function.curry[window_size]
 
 ## Body
 require 'Datavyu_API.rb'
@@ -32,7 +49,7 @@ class SequenceMatcher
       end
       val
     end
-    self.table[0,0] = 0
+    self.table[0, 0] = 0
 
     self.cseq = []
     self.unpaired_s1 = []
@@ -103,32 +120,30 @@ class SequenceMatcher
   end
 
   def pairs
-    return self.cseq
+    cseq
   end
 end
 
 pri_col = get_column(pri_column_name)
 rel_col = get_column(rel_column_name)
-score_function = lambda do |pri, rel|
-  return -1 if (pri.nil? || rel.nil?)
-  return -100 if (pri.onset - rel.onset).abs > window_size
 
-  score = 0
-  codes_to_check.each do |c|
-    if pri.get_code(c) == rel.get_code(c)
-      score += 5
-    end
-  end
-  return score
+# Select out cells nested inside block cells, if blocks column specified
+if blocks_column_name == '' || blocks_column_name.nil?
+  pri_cells = pri_col.cells
+  rel_cells = rel_col.cells
+else
+  blocks_col = get_column(blocks_column_name)
+  overlap_fn = ->(x) { blocks_col.cells.any? { |y| y.overlaps_cell(x) } }
+  pri_cells = pri_col.cells.select(&overlap_fn)
+  rel_cells = rel_col.cells.select(&overlap_fn)
 end
 
-sol = SequenceMatcher.new(pri_col.cells, rel_col.cells, &score_function)
+sol = SequenceMatcher.new(pri_cells, rel_cells, &windowed_score_fn)
 sol.solve
 # sol.print_table('~/Desktop/table.csv')
 # puts sol.cseq.map{ |p| p.map(&:ordinal).join(', ') }.join("\n")
 # p sol.unpaired_s1.map(&:ordinal).join(', ')
 # p sol.unpaired_s2.map(&:ordinal).join(', ')
-
 
 disagree_col = new_column(disagree_column_name, 'comment')
 # Insert disagree cells for unpaired cells.
@@ -146,42 +161,43 @@ end
 set_column(disagree_col)
 
 # Calculate agreement percent.
-denom = [pri_col.cells.size, rel_col.cells.size].max
+denom = [pri_cells.size, rel_cells.size].max
 agree_perc = 100.0 * sol.pairs.size.to_f / denom.to_f
-puts "Agreement for onset:\t%.2f" % (agree_perc)
+printf("Agreement for onset:\t%.2f\n", agree_perc)
 
 # For each code, compute number of pairings which agree on that code
 codes_to_check.each do |code|
-  agree_pairings = sol.pairs.select{ |x| x[0].get_code(code) == x[1].get_code(code) }
+  agree_pairings = sol.pairs
+                      .select { |x| x[0].get_code(code) == x[1].get_code(code) }
   agree_perc = 100.0 * agree_pairings.size.to_f / denom.to_f
-  puts "Agreement for code #{code}:\t%.2f" % (agree_perc)
+  printf("Agreement for code #{code}:\t%.2f\n", agree_perc)
 end
 
 # Output the data to output file.
 data = []
 header = [pri_column_name, rel_column_name].map do |colname|
-  (%w(ordinal onset) + codes_to_check).map{ |x| "#{colname}_#{x}" }
+  (%w[ordinal onset] + codes_to_check).map { |x| "#{colname}_#{x}" }
 end.flatten
 data << header.join(delimiter)
 
 sol.pairs.each do |pair|
   row = pair.map do |cell|
-    (%w(ordinal onset) + codes_to_check).map{ |x| cell.get_code(x) }
+    (%w[ordinal onset] + codes_to_check).map { |x| cell.get_code(x) }
   end.flatten
   data << row.join(delimiter)
 end
 
 # Unpaired pri cells
-unpaired_pri = pri_col.cells.reject{ |x| sol.pairs.map{ |y| y[0]}.include?(x) }
+unpaired_pri = pri_cells.reject { |x| sol.pairs.map { |y| y[0] }.include?(x) }
 unpaired_pri.each do |cell|
-  row = (%w(ordinal onset) + codes_to_check).map{ |x| cell.get_code(x) } + [''] * (codes_to_check.size + 2)
+  row = (%w[ordinal onset] + codes_to_check).map { |x| cell.get_code(x) } + [''] * (codes_to_check.size + 2)
   data << row.join(delimiter)
 end
 
 # Unpaired rel cells
-unpaired_rel = rel_col.cells.reject{ |x| sol.pairs.map{ |y| y[1]}.include?(x) }
+unpaired_rel = rel_cells.reject { |x| sol.pairs.map { |y| y[1] }.include?(x) }
 unpaired_rel.each do |cell|
-  row = [''] * (codes_to_check.size + 2) + (%w(ordinal onset) + codes_to_check).map{ |x| cell.get_code(x) }
+  row = [''] * (codes_to_check.size + 2) + (%w[ordinal onset] + codes_to_check).map { |x| cell.get_code(x) }
   data << row.join(delimiter)
 end
 
