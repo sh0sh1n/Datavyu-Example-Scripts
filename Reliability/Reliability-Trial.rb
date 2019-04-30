@@ -15,9 +15,13 @@ begin
   # Convert relative path and symbols to fully qualified path
   output_file = File.expand_path(output_file)
 
-    # Check argument example
-    # Format: "primary column", "reliability column", "variable that is the same in each cell (like a trial number)", the difference between primary times and rel times that is OK, output file (use "") for no output file
-    # Time check is in milliseconds
-    checkReliability(primary_column_name, reliability_column_name, matching_code, tolerance_ms, output_file)
+  # Check argument example
+  # Parameters: 
+  #   - primary column: name of primary coder's column
+  #   - reliability column: name of reliability coder's column
+  #   - matching_code: code to pair up observations (cells) between the two columns, e.g., "onset" time
+  #   - tolerance_ms: maximum difference between primary times and rel times that is OK, in milliseconds
+  #   - output file: file to write disagreements to; use "" for no output file
+  check_reliability(primary_column_name, reliability_column_name, matching_code, tolerance_ms, output_file)
 
 end
