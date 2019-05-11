@@ -35,8 +35,8 @@ end
 inpath = File.expand_path(input_folder)
 infiles = get_datavyu_files_from(inpath)
 infiles.each do |infile|
-  inpath = File.join(inpath, infile)
-  $db, $pj = load_db(inpath)
+  fp = File.join(inpath, infile)
+  $db, $pj = load_db(fp)
   puts "Working on #{infile}..."
 
   metadata_col = get_column(metadata_column)
