@@ -7,6 +7,7 @@ delimiter = ','
 
 ## Body
 require 'Datavyu_API'
+require 'csv'
 
 # Assemble data
 columns = case columns_to_export
@@ -23,13 +24,11 @@ max_ord = columns.map(&:cells)
                  .map(&:ordinal)
                  .max
 
-data = []
-
 # Write header
 header = columns.map do |col|
   (%w[ordinal onset offset] + col.arglist).map { |code| "#{col.name}.#{code}" }
 end.flatten
-data << header.join(delimiter)
+data = CSV.new('', col_sep: delimiter, headers: header, write_headers: true)
 
 # Iterate over ordinals and add data
 (0..(max_ord - 1)).each do |ord|
@@ -42,7 +41,7 @@ data << header.join(delimiter)
     end
   end
   row = codes.flatten
-  data << row.join(delimiter)
+  data << row
 end
 
 # Write data to file
@@ -70,7 +69,7 @@ outfile = case output_file
             raise 'invalid output_file parameter'
           end
 
-outfile.puts data
+outfile.puts data.string
 outfile.close
 
 puts 'Finished.'
