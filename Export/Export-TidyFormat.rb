@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Flexible export script.
 # Print single-cell columns "T" as repeated columns for file.
 # Iterate over nested cells.
@@ -11,17 +13,17 @@
 
 ## Parameters
 input_folder = '~/Desktop/Datavyu' # folder containing .opf files
-output_file = '~/Desktop/Data.csv'  # file to write the data to
+output_file = '~/Desktop/Data.csv' # file to write the data to
 
 # This is a listing of all columns and the codes from those columns that should
 # be exported.
 code_map = {
-  'id' => %w[study region agegrp id sex tdate bdate],
-  'cond' => %w[ordinal onset offset task],
-  'place' => %w[ordinal onset offset clothes leg],
-  'motorbout' => %w[ordinal onset offset none tri sit belly hk_hf bumshuf stand cruise walk],
-  'sitassess' => %w[ordinal onset offset sittype sitend],
-  'linked_col1' => %w[ordinal onset offset]
+  'id' => %w[participant testdate birthdate agegroup sex],
+  'transcribe' => %w[ordinal onset source content],
+  'babyobject_uniquetypes_clean' => %w[ordinal onset offset smhouse childhouse
+                                       lghouse food toy],
+  'mom_lang_clean' => %w[ordinal eafsrd yn],
+  'mom_prox' => %w[ordinal onset offset]
 }
 
 # Static columns are columns with a single cell. Code values from the first cell
@@ -33,15 +35,15 @@ static_columns = %w[id]
 # the first column. Cells in the third column will always be nested temporally
 # within cells of the second column. Etc...
 # The last column is this list is the innermost nested column.
-nested_columns = %w[]
+nested_columns = %w[babyobject_uniquetypes_clean transcribe]
 
 # Sequential columns lists columms that should be printed on separate rows.
 # If there is at least one nested_column specified, cells from the sequential
 # columns will be printed only if they are nested inside the innermost nested cell.
-sequential_columns = %w[cond place motorbout sitassess]
+sequential_columns = %w[mom_lang_clean]
 
 # Linked columns allows printing cells using a custom matching function.
-linked_columns = %w[linked_col1]
+linked_columns = %w[mom_prox]
 
 # Specify arbitrary links for linked columns.
 # Each linked column must have a function that takes as input:
@@ -49,27 +51,32 @@ linked_columns = %w[linked_col1]
 #   2) list of cells in the linked column
 # and returns the cell from the linked column that should be printed for this row.
 links = {
-  'linked_col1' => lambda do |row_cells, col_cells|
-    ref_cell = row_cells.find { |x| x.parent == 'motorbout' }
-    return ref_cell.nil? ? nil : col_cells.find { |x| x.ordinal == ref_cell.ordinal }
+  'mom_prox' => lambda do |row_cells, col_cells|
+    ref_cell = row_cells.find { |x| x.parent == 'mom_lang_clean' }
+    ref_cell.nil? ? nil : col_cells.find { |x| x.overlaps_cell(ref_cell) }
   end
 }
-blank_value = '' # code to put in for missing cells
 delimiter = ','
-
-# Set to true to force a row to be printed for each innermost-nested cell.
-# Default behavior is to skip nested cells that don't have any data for sequential cells.
-ensure_rows_per_nested_cell = true
 
 ## Body
 require 'Datavyu_API.rb'
 
-# Simple method to print nested columns.
-# Returns a list of list where the inner list is a row of cells corresponding to a line of data to print out.
-def nested_print(*columns)
-  columns.map!{ |x| get_column(x) if x.class == ''.class }
+# all columns to print
+all_cols = [static_columns, linked_columns,
+            nested_columns, sequential_columns].flatten
+# Sanity check parameters.
+# Make sure all specified columns have entries in the code map
+invalid_cols = all_cols - code_map.keys
+unless invalid_cols.empty?
+  raise 'Following columns do not have entries in code_map parameter: '\
+        "#{invalid_cols.join(', ')}"
+end
 
-  return nested_print_helper(columns, [], [])
+# Simple method to print nested columns.
+# Returns a list of list where the inner list
+# is a row of cells corresponding to a line of data to print out.
+def nested_print(*columns)
+  nested_print_helper(columns, [], [])
 end
 
 # Recursive method to add
@@ -77,147 +84,117 @@ def nested_print_helper(columns, row_cells, table)
   col = columns.first
 
   if col.nil?
-    table << row_cells
+    table << row_cells.dup
     return table
   end
 
-  cells = col.cells
   oc = row_cells.last
-  cells = cells.select{ |x| oc.contains(x) } unless oc.nil?
+  cells = col.cells
+  # select only nested cells if outer cell exists
+  cells = cells.select { |x| oc.contains(x) } unless oc.nil?
 
   if cells.empty?
-    table << row_cells
+    table << row_cells.dup
     return table
   end
 
   cells.each do |cell|
-    table = nested_print_helper(columns[1..-1], row_cells + [cell], table)
+    row_cells.push(cell)
+    table = nested_print_helper(columns[1..-1], row_cells, table)
+    row_cells.pop
   end
 
-  return table
+  table
 end
 
-data = []
+# Function to get a table of sequential cells
+# in a diagonal layout: each row has a single
+# cell from a single column.
+sequential_printer = lambda do |seq_cols, outer_cell|
+  return [[]] if seq_cols.empty?
+
+  table = []
+  row = Array.new(seq_cols.size)
+  seq_cols.each_with_index do |sc, idx|
+    seq_cells = sc.cells
+    seq_cells = seq_cells.select { |x| outer_cell.contains(x) } unless outer_cell.nil?
+
+    seq_cells.each do |c|
+      row[idx] = c
+      table << row.dup
+    end
+    row[idx] = nil
+  end
+  table
+end
+
+# Helper function to get codes from list of cells
+# using the column-code mapping.
+# Returns a hashmap from column name to list of values
+data_map = lambda do |mapping, columns, cells|
+  # if no cells, all values are blanks
+  cells ||= []
+  columns.zip(cells).each_with_object({}) do |(col, cell), h|
+    codes = mapping[col]
+    h[col] = cell.nil? ? codes.map { '' } : cell.get_codes(codes)
+  end
+end.curry.call(code_map)
+
+# Flattens out the values of the data map to generate a row of output
+data_row = ->(cols, cells) { data_map.call(cols, cells).values.flatten }.curry
+all_data = data_row.call(all_cols)
+
 # Header order is: static, bound, nested, sequential
-header = (static_columns + linked_columns + nested_columns + sequential_columns).map do |colname|
-  code_map[colname].map { |codename| "#{colname}_#{codename}" }
-end
-header.flatten!
-data << header.join(delimiter)
-
-# Init arrays of default values.
-default_data = {}
-code_map.each_pair { |k, v| default_data[k] = [blank_value] * v.size }
+col_header = lambda do |map, col|
+  map[col].map { |x| "#{col}_#{x}" }
+end.curry.call(code_map)
+header = all_cols.flat_map(&col_header)
+data = [header.join(delimiter)]
 
 input_path = File.expand_path(input_folder)
 infiles = Dir.chdir(input_path) { Dir.glob('*.opf') }
-infiles.each do |infile|
+infiles.sort.each do |infile|
   $db, $pj = load_db(File.join(input_path, infile))
   puts "Printing #{infile}..."
 
-  columns = {}
-  code_map.keys.each { |x| columns[x] = get_column(x) }
+  columns = code_map.keys.each_with_object({}) { |x, h| h[x] = get_column(x) }
 
-  # Get static data from first cells.
-  static_data = static_columns.map do |colname|
-    col = columns[colname]
-    cell = col.cells.first
-    raise "Can't find cell in #{col}" if cell.nil? # static columns must contain cell
-    cell.get_codes(code_map[colname])
+  # Get cells from static columns
+  static_cells = static_columns.map do |col|
+    columns[col].cells.first
   end
-  static_data.flatten!
 
-  # Iterate over cells of innermost-nested column.
-  if nested_columns.empty?
-    inner_data = []
-    outer_data = []
+  # map column names to actual columns
+  cols = ->(xs) { xs.map { |x| columns[x] } }
+  nest_cols = cols.call(nested_columns)
+  seq_cols = cols.call(sequential_columns)
 
-    # Iterate over sequential columns.
-    rows_added = 0
-    sequential_columns.each do |scol|
-      # Iterate over sequential cells.
-      seq_cells = columns[scol].cells
-      seq_cells.each do |scell|
-        # Reset data hash so values are not carried over.
-        seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
-        linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
+  # Get rows of cells for nested columns
+  nested_table = nested_print(*nest_cols)
 
-        seq_data[scol] = scell.get_codes(code_map[scol])
+  # Iterate over the cell rows
+  nested_table.each do |nested_cells|
+    # The innermost cell is in the column at the end of the nested columns list
+    innermost_cell = nested_cells.last
 
-        # Get data from bound/linked columns
-        linked_columns.each do |lcol|
-          rule = links[lcol]
-          bcell = rule.call([scell], columns[lcol].cells)
-          linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
-        end
-
-        row = static_data + linked_data.values.flatten + outer_data + inner_data + seq_data.values.flatten
-        data << row.join(delimiter)
-
-        rows_added += 1
-      end
-    end
-  else
-    # Get rows of cells for nested columns
-    nested_table = nested_print(*nested_columns)
-    # Iterate over the cell rows
-    nested_table.each do |nested_row|
-      # Fill out nested data by fetching the code values from the cells in each row
-      nested_data = nested_row.zip(nested_columns).map do |cell, colname|
-        if cell.nil?
-          default_data[colname]
-        else
-          cell.get_codes(code_map[colname])
-        end
-      end.flatten
-
-      # The innermost cell is in the column at the end of the nested columns list
-      innermost_cell = nested_row.last
-
-      # Init blank data hash so that data for this column is placed properly.
-      seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
-      linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
-
-      # Iterate over sequential columns.
-      rows_added = 0
-      sequential_columns.each do |scol|
-        # Iterate over sequential cells nested inside inner cell.
-        seq_cells = columns[scol].cells.select { |x| innermost_cell.contains(x) }
-        seq_cells.each do |scell|
-          # Reset data hash so values are not carried over.
-          seq_data = default_data.select { |k, _v| sequential_columns.include?(k) }
-          linked_data = default_data.select { |k, _v| linked_columns.include?(k) }
-
-          seq_data[scol] = scell.get_codes(code_map[scol])
-
-          # Get data from bound/linked columns
-          linked_columns.each do |lcol|
-            rule = links[lcol]
-            bcell = rule.call(nested_row + [scell], columns[lcol].cells)
-            linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
-          end
-
-          row = static_data + linked_data.values.flatten + nested_data+ seq_data.values.flatten
-          data << row.join(delimiter)
-
-          rows_added += 1
-        end
-      end
-
-      # Edge case for no nested sequential cell(s).
-      next unless rows_added.zero? && ensure_rows_per_nested_cell
-
+    seq_table = sequential_printer.call(seq_cols, innermost_cell)
+    # if the table is empty, add a blank row so we can still print
+    seq_table << [] if seq_table.empty?
+    seq_table.each do |sequential_cells|
       # Get data from bound/linked columns
-      linked_columns.each do |lcol|
+      linked_cells = linked_columns.each_with_object([]) do |lcol, arr|
         rule = links[lcol]
-        bcell = rule.call(nested_row, columns[lcol].cells)
-        linked_data[lcol] = bcell.get_codes(code_map[lcol]) unless bcell.nil?
+        lcell = rule.call(
+          (static_cells + arr + nested_cells + sequential_cells).compact,
+          columns[lcol].cells
+        )
+
+        arr << lcell
       end
 
-      row = static_data + linked_data.values.flatten + nested_data + seq_data.values.flatten
+      all_cells = static_cells + linked_cells + nested_cells + sequential_cells
+      row = all_data.call(all_cells)
       data << row.join(delimiter)
-
-      rows_added += 1
     end
   end
 end
