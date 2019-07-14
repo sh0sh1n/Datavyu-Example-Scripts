@@ -56,10 +56,12 @@ links = {
     ref_cell.nil? ? nil : col_cells.find { |x| x.overlaps_cell(ref_cell) }
   end
 }
+
 delimiter = ','
 
 ## Body
 require 'Datavyu_API.rb'
+require 'csv'
 
 # all columns to print
 all_cols = [static_columns, linked_columns,
@@ -150,6 +152,7 @@ col_header = lambda do |map, col|
 end.curry.call(code_map)
 header = all_cols.flat_map(&col_header)
 data = [header.join(delimiter)]
+data = CSV.new(String.new, write_headers: true, headers: header, col_sep: delimiter)
 
 input_path = File.expand_path(input_folder)
 infiles = Dir.chdir(input_path) { Dir.glob('*.opf') }
@@ -194,14 +197,14 @@ infiles.sort.each do |infile|
 
       all_cells = static_cells + linked_cells + nested_cells + sequential_cells
       row = all_data.call(all_cells)
-      data << row.join(delimiter)
+      data << row
     end
   end
 end
 
 puts 'Writing data to file...'
 outfile = File.open(File.expand_path(output_file), 'w+')
-outfile.puts data
+outfile.puts data.string
 outfile.close
 
 puts 'Finished.'
