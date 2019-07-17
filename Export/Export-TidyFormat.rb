@@ -83,29 +83,29 @@ end
 
 # Recursive method to add
 def nested_print_helper(columns, row_cells, table)
-  col = columns.first
+  col = columns.shift
 
   if col.nil?
     table << row_cells.dup
-    return table
+  else
+    cells = col.cells
+    oc = row_cells.last
+    # select only nested cells if outer cell exists
+    cells = cells.select { |x| oc.contains(x) } unless oc.nil?
+
+    if cells.empty?
+      # pad row with nils for missing columns
+      # extra nil for the shifted column
+      table << (row_cells + [nil] * (columns.size + 1))
+    else
+      cells.each do |cell|
+        row_cells.push(cell)
+        nested_print_helper(columns, row_cells, table)
+        row_cells.pop
+      end
+    end
   end
-
-  oc = row_cells.last
-  cells = col.cells
-  # select only nested cells if outer cell exists
-  cells = cells.select { |x| oc.contains(x) } unless oc.nil?
-
-  if cells.empty?
-    table << row_cells.dup
-    return table
-  end
-
-  cells.each do |cell|
-    row_cells.push(cell)
-    table = nested_print_helper(columns[1..-1], row_cells, table)
-    row_cells.pop
-  end
-
+  col && columns.unshift(col)
   table
 end
 
@@ -151,7 +151,6 @@ col_header = lambda do |map, col|
   map[col].map { |x| "#{col}_#{x}" }
 end.curry.call(code_map)
 header = all_cols.flat_map(&col_header)
-data = [header.join(delimiter)]
 data = CSV.new(String.new, write_headers: true, headers: header, col_sep: delimiter)
 
 input_path = File.expand_path(input_folder)
