@@ -53,7 +53,7 @@ require 'csv'
 header = (static_columns + scan_columns + linked_columns).map do |colname|
   code_map[colname].map { |codename| "#{colname}_#{codename}" }
 end.flatten
-data = CSV.new(+'', write_headers: true, headers: header, col_sep: delimiter)
+data = CSV.new(String.new, write_headers: true, headers: header, col_sep: delimiter)
 
 # Helper function to get convert cells to appropriate
 # code values defined in code map.
