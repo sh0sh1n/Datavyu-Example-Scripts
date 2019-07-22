@@ -40,17 +40,21 @@ links = {}
 
 delimiter = ','
 
-# Set to true to force a row to be printed for each innermost-nested cell.
-# Default behavior is to skip nested cells that don't have
-# any data for sequential cells.
-ensure_rows_per_nested_cell = true
-
 ## Body
 require 'Datavyu_API.rb'
 require 'csv'
 
 # Header order is: static, bound, nested, sequential
-header = (static_columns + scan_columns + linked_columns).map do |colname|
+all_columns = static_columns + scan_columns + linked_columns
+# All columns must have codes defined in code_map
+missing_columns = all_columns - code_map.keys
+unless missing_columns.empty?
+  puts 'Missing following columns from code_map parameter:'
+  puts missing_columns
+  raise
+end
+
+header = all_columns.map do |colname|
   code_map[colname].map { |codename| "#{colname}_#{codename}" }
 end.flatten
 data = CSV.new(String.new, write_headers: true, headers: header, col_sep: delimiter)
