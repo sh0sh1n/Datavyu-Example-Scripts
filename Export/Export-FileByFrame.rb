@@ -18,7 +18,7 @@ java_import javax::swing::filechooser::FileNameExtensionFilter
 data = []
 
 # Get framerate
-fps = Datavyu.getDataController().getCurrentFPS()
+fps = Datavyu.get_video_controller.get_frame_rate_controller.get_frame_rate
 fps = frame_rate_backup if (fps.nil? || fps <= 1 )
 
 # Get columns
