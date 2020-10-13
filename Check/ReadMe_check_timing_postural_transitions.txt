@@ -1,3 +1,6 @@
+Run this script on your open datavyu spreadsheet to check that cells 
+within specified columns meet certain timing conditions.
+
 This script does various timing checks (by printing warning messages into the
 scripting console for each violation) on cells of columns specified in
 Parameters section of script.
