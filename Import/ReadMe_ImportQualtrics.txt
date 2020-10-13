@@ -14,5 +14,7 @@ STEPS TO RUN:
 	- Any element in header with  text ‘onset’ or ‘offset’ is considered a trial (except for intro_onset 	and end_onset)
 	- Populates a cell for each trial with label from header in code <trial> and timing information 	from CSV file reflected in onset/offset
 	- For some entries in header, there is onset timing information, but not offset. In this case, it 	makes a point cell and sets offset=onset
+3) Open a blank datavyu spreadsheet and run the script. It will modify all the datavyu files in your Datayu folder to have
+the new column
 
    
