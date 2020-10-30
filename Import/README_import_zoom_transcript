@@ -1,0 +1,10 @@
+## Before running this script: put all your zoom exported transcript .vtt files
+## and/or .txt files into a folder on your desktop called zoom_transcript.
+## Running this script will insert and populate a transcribe column in your
+## currently open datavyu spreadsheet.
+
+## This script imports time-stamped transcriptions exported from zoom video chats
+## in the form of .vtt files (or .txt files) into the currently open datavyu
+## spreadsheet.
+## It will create a new column called transcript with codes <source> and
+## <content> with a cell for each transcription.
