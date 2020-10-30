@@ -10,16 +10,6 @@
 ## <content> with a cell for each transcription.
 
 ## Parameters
-## IMPORTANT parameter! Look in your .vtt or .txt file produced by zoom
-## and see which letters begin each speaker/source line
-## e.g.
-## 1
-## 00:00:02.460 --> 00:00:03.030
-## Bob
-## If there is one speaker named Bob, make this parameter ['B']
-## If there are two speakers Alice and Bob, make this parameter ['A', 'B']
-## etc.
-speaker_first_letters = ['B','P']
 # folder that contains the zoom .vtt files with transcripts
 input_folder = '~/Desktop/zoom_transcript'
 # name of column in which to import transcription data
